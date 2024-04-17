@@ -3,9 +3,14 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
+    // Login Error
     LoginFail,
 
-    // Model Erros
+    // Auth Errors
+    AuthFailNoAuthCookie,
+    AuthFailTokenWrongFormat,
+
+    // Model Errors
     TicketDeleteFailIdNotFound { id: u64 },
 }
 

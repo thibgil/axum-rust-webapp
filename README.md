@@ -1,4 +1,4 @@
-# Learning Axum Rust Webdev
+# Learning Axum Webdev
 
 ## Quick_dev commands
 - Install cargo-watch

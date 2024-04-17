@@ -11,28 +11,40 @@ use axum::{
 };
 
 pub use self::error::{Error, Result};
+pub use self::model::{ModelController};
 
+mod ctx;
 mod error;
 mod web;
 mod model;
 
 #[tokio::main]
-async fn main() {
-    // Define router
+async fn main() -> Result<()> {
+
+    // Initialize ModelController
+    let mc = ModelController::new().await?;
+
+    // Initialize router
+    let routes_apis = web::routes_tickets::routes(mc.clone())
+        .route_layer(middleware::from_fn(web::mw_auth::mw_require_auth)); // Middleware that check if the user is authenticated
+
     let routes_all = Router::new()
         .merge(routes_hello())
         .merge(web::routes_login::routes())
+        .nest("/api", routes_apis) // merge & prefix every route with /api
         .layer(middleware::map_response(main_response_mapper))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
 
-    // Start server
+    // Initialize server
     let addr = SocketAddr::from(([127, 0, 0, 1], 8080));
     println!("=> LISTENING on {addr}\n");
     axum::Server::bind(&addr)
         .serve(routes_all.into_make_service())
         .await
         .unwrap();
+
+    Ok(())
 }
 
 async fn main_response_mapper(res: Response) -> Response {
@@ -41,7 +53,6 @@ async fn main_response_mapper(res: Response) -> Response {
     println!();
     res
 }
-
 
 fn routes_static() -> Router {
     return Router::new().nest_service("/", get_service(ServeDir::new("./")))
